@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت | ALIVANA_Ai</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/geist-sans@5.0.1/index.css">
+
+<style>
+  :root{
+    --background: 260 87% 3%;
+    --foreground: 40 6% 95%;
+    --accent1:#6366f1; --accent2:#a855f7; --accent3:#fcd34d;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family:'Geist Sans','Vazirmatn',sans-serif;
+    min-height:100vh;
+  }
+  button, input, textarea, select{ font-family:inherit; color:inherit; }
+  a{ color:inherit; }
+
+  .bg-wash{
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(99,102,241,0.25), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, rgba(168,85,247,0.18), transparent 60%),
+      hsl(var(--background));
+  }
+
+  .liquid-glass{
+    background: rgba(255,255,255,0.045);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+    position:relative;
+  }
+  .liquid-glass::before{
+    content:""; position:absolute; inset:0; border-radius:inherit; padding:1.2px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.35) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+  }
+
+  /* ---------- login screen ---------- */
+  #loginScreen{
+    position:relative; z-index:1;
+    min-height:100vh; display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .login-box{
+    width:100%; max-width:380px;
+    border-radius:22px; padding:38px 32px;
+    text-align:center;
+  }
+  .login-mark{
+    width:52px; height:52px; border-radius:14px; margin:0 auto 18px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2) 55%,var(--accent3));
+    font-weight:700; font-size:22px; color:#0a0612;
+  }
+  .login-box h1{ font-size:19px; font-weight:700; margin-bottom:6px; }
+  .login-box p{ font-size:13px; color:hsl(var(--foreground)/0.55); margin-bottom:26px; }
+  .field{ text-align:right; margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; color:hsl(var(--foreground)/0.6); margin-bottom:6px; }
+  .field input{
+    width:100%; padding:12px 14px; border-radius:11px;
+    background:hsl(var(--foreground)/0.06);
+    border:1px solid hsl(var(--foreground)/0.12);
+    font-size:14.5px; outline:none;
+  }
+  .field input:focus{ border-color:var(--accent2); }
+  .login-submit{
+    width:100%; margin-top:8px; padding:13px; border-radius:11px;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2));
+    color:#fff; font-weight:700; font-size:14.5px;
+    transition:opacity .2s ease;
+  }
+  .login-submit:hover{ opacity:.9; }
+  .login-error{ color:#f87171; font-size:12.5px; margin-top:12px; display:none; }
+  .login-error.show{ display:block; }
+  .back-link{ display:block; margin-top:20px; font-size:12.5px; color:hsl(var(--foreground)/0.45); }
+
+  /* ---------- dashboard shell ---------- */
+  #dashboard{ display:none; position:relative; z-index:1; min-height:100vh; }
+  #dashboard.show{ display:flex; }
+
+  .sidebar{
+    width:230px; flex-shrink:0;
+    padding:24px 16px;
+    display:flex; flex-direction:column; gap:4px;
+    border-left:1px solid hsl(var(--foreground)/0.08);
+    min-height:100vh;
+    position:sticky; top:0;
+  }
+  .sidebar-logo{
+    display:flex; align-items:center; gap:10px;
+    font-weight:700; font-size:16px; padding:8px 10px 20px;
+  }
+  .sidebar-logo .mark{
+    width:28px; height:28px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--accent1),var(--accent2) 55%,var(--accent3));
+    color:#0a0612; font-size:13px; font-weight:700;
+  }
+  .tab-btn{
+    text-align:right; padding:11px 12px; border-radius:10px;
+    font-size:13.8px; color:hsl(var(--foreground)/0.65);
+    transition:background .2s ease, color .2s ease;
+  }
+  .tab-btn:hover{ background:hsl(var(--foreground)/0.06); color:hsl(var(--foreground)/0.9); }
+  .tab-btn.active{ background:hsl(var(--foreground)/0.1); color:hsl(var(--foreground)); }
+  .sidebar-bottom{ margin-top:auto; display:flex; flex-direction:column; gap:4px; }
+
+  .main{ flex:1; padding:32px 36px 100px; max-width:900px; }
+  .main h2{ font-size:22px; font-weight:700; margin-bottom:4px; }
+  .main > .sub{ font-size:13.5px; color:hsl(var(--foreground)/0.55); margin-bottom:28px; }
+
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .card{ border-radius:18px; padding:22px; margin-bottom:18px; }
+  .card h3{ font-size:14.5px; font-weight:700; margin-bottom:16px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .field-row.single{ grid-template-columns:1fr; }
+  @media (max-width:640px){ .field-row{ grid-template-columns:1fr; } .main{ padding:24px 18px 100px; } .sidebar{ display:none; } }
+
+  .f{ margin-bottom:14px; }
+  .f label{ display:block; font-size:12.5px; color:hsl(var(--foreground)/0.6); margin-bottom:6px; }
+  .f input, .f textarea, .f select{
+    width:100%; padding:11px 13px; border-radius:10px;
+    background:hsl(var(--foreground)/0.06);
+    border:1px solid hsl(var(--foreground)/0.12);
+    font-size:14px; outline:none; resize:vertical;
+  }
+  .f input:focus, .f textarea:focus, .f select:focus{ border-color:var(--accent2); }
+  .f .hint{ font-size:11.5px; color:hsl(var(--foreground)/0.4); margin-top:5px; }
+
+  .item-block{
+    border-radius:14px; padding:16px; margin-bottom:12px;
+    background:hsl(var(--foreground)/0.03);
+    border:1px solid hsl(var(--foreground)/0.08);
+  }
+  .item-block-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .item-block-head span{ font-size:13px; font-weight:600; color:hsl(var(--foreground)/0.7); }
+
+  .btn{
+    padding:10px 18px; border-radius:10px; font-size:13.5px; font-weight:600;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .btn-primary{ background:linear-gradient(135deg,var(--accent1),var(--accent2)); color:#fff; }
+  .btn-primary:hover{ opacity:.9; }
+  .btn-ghost{ background:hsl(var(--foreground)/0.08); }
+  .btn-ghost:hover{ background:hsl(var(--foreground)/0.14); }
+  .btn-danger{ background:rgba(248,113,113,0.12); color:#f87171; }
+  .btn-danger:hover{ background:rgba(248,113,113,0.22); }
+  .btn-sm{ padding:7px 12px; font-size:12.5px; }
+
+  .save-bar{
+    position:sticky; bottom:0; margin-top:24px; padding:14px 18px; border-radius:14px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .save-msg{ font-size:13px; color:#34d399; opacity:0; transition:opacity .3s ease; }
+  .save-msg.show{ opacity:1; }
+
+  .preview-thumb{ width:100%; max-height:160px; object-fit:cover; border-radius:10px; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div class="bg-wash"></div>
+
+<!-- ================= LOGIN ================= -->
+<div id="loginScreen">
+  <div class="login-box liquid-glass">
+    <div class="login-mark">A</div>
+    <h1>ورود به پنل مدیریت</h1>
+    <p>ALIVANA_Ai — مدیریت محتوای سایت</p>
+    <div class="field">
+      <label>نام کاربری</label>
+      <input type="text" id="loginUser" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>رمز عبور</label>
+      <input type="password" id="loginPass" autocomplete="current-password">
+    </div>
+    <button class="login-submit" id="loginSubmit">ورود</button>
+    <div class="login-error" id="loginError">نام کاربری یا رمز عبور اشتباه است.</div>
+    <a href="index.html" class="back-link">بازگشت به سایت</a>
+  </div>
+</div>
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dashboard">
+  <aside class="sidebar liquid-glass">
+    <div class="sidebar-logo"><div class="mark">A</div> پنل ALIVANA</div>
+    <button class="tab-btn active" data-tab="hero">متن اصلی صفحه خانه</button>
+    <button class="tab-btn" data-tab="media">ویدیو و تصاویر</button>
+    <button class="tab-btn" data-tab="topics">موضوعات</button>
+    <button class="tab-btn" data-tab="plans">پلن‌ها</button>
+    <button class="tab-btn" data-tab="studies">مطالعات</button>
+    <button class="tab-btn" data-tab="buttons">دکمه‌های سفارشی</button>
+    <button class="tab-btn" data-tab="support">پشتیبانی و تماس</button>
+    <div class="sidebar-bottom">
+      <a href="index.html" target="_blank" class="tab-btn">مشاهده سایت ↗</a>
+      <button class="tab-btn" id="logoutBtn">خروج از پنل</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ---------- HERO TAB ---------- -->
+    <div class="tab-panel active" id="tab-hero">
+      <h2>متن اصلی صفحه خانه</h2>
+      <div class="sub">تیتر، زیرنویس و دکمه اصلی که اول از همه در سایت دیده می‌شود.</div>
+      <div class="card liquid-glass">
+        <div class="field-row">
+          <div class="f"><label>بخش اول تیتر (رنگ ساده)</label><input id="h_titlePlain"></div>
+          <div class="f"><label>بخش دوم تیتر (رنگ گرادیانت)</label><input id="h_titleGrad"></div>
+        </div>
+        <div class="f"><label>زیرنویس کوتاه (روی صفحه نمایش داده می‌شود)</label><textarea id="h_subShort" rows="2"></textarea>
+          <div class="hint">برای خط جدید از &lt;br&gt; استفاده کنید.</div></div>
+        <div class="f"><label>توضیح کامل (با کلیک روی زیرنویس باز می‌شود)</label><textarea id="h_subDetail" rows="3"></textarea></div>
+        <div class="f"><label>متن دکمه اصلی (CTA)</label><input id="h_ctaText"></div>
+      </div>
+    </div>
+
+    <!-- ---------- MEDIA TAB ---------- -->
+    <div class="tab-panel" id="tab-media">
+      <h2>ویدیو و تصاویر</h2>
+      <div class="sub">ویدیوی پس‌زمینه سایت که در همهٔ صفحات نمایش داده می‌شود، و گالری تصاویر صفحه خانه.</div>
+
+      <div class="card liquid-glass">
+        <h3>ویدیوی پس‌زمینه</h3>
+        <div class="f">
+          <label>آدرس (URL) ویدیو</label>
+          <input id="m_videoUrl">
+          <div class="hint">پیشنهاد می‌شود آدرس یک فایل mp4 میزبانی‌شده باشد (سریع‌تر و پایدارتر از آپلود مستقیم است).</div>
+        </div>
+        <div class="f">
+          <label>یا آپلود فایل ویدیو از دستگاه</label>
+          <input type="file" id="m_videoFile" accept="video/mp4">
+          <div class="hint">فایل‌های حجیم ممکن است ذخیره نشوند؛ برای ویدیوهای بزرگ از آدرس URL استفاده کنید.</div>
+        </div>
+      </div>
+
+      <div class="card liquid-glass">
+        <h3>گالری تصاویر صفحه خانه</h3>
+        <div id="galleryItems"></div>
+        <button class="btn btn-ghost btn-sm" id="addGalleryBtn">+ افزودن تصویر جدید</button>
+      </div>
+    </div>
+
+    <!-- ---------- TOPICS TAB ---------- -->
+    <div class="tab-panel" id="tab-topics">
+      <h2>موضوعات روان‌شناسی</h2>
+      <div class="sub">کارت‌های موضوعاتی که در صفحه «موضوعات» نمایش داده می‌شوند.</div>
+      <div id="topicsItems"></div>
+      <button class="btn btn-ghost btn-sm" id="addTopicBtn">+ افزودن موضوع جدید</button>
+    </div>
+
+    <!-- ---------- PLANS TAB ---------- -->
+    <div class="tab-panel" id="tab-plans">
+      <h2>پلن‌های اشتراک</h2>
+      <div class="sub">پلن‌های قیمت‌گذاری که در صفحه «پلن‌ها» نمایش داده می‌شوند.</div>
+      <div id="plansItems"></div>
+      <button class="btn btn-ghost btn-sm" id="addPlanBtn">+ افزودن پلن جدید</button>
+    </div>
+
+    <!-- ---------- STUDIES TAB ---------- -->
+    <div class="tab-panel" id="tab-studies">
+      <h2>مطالب و مقالات</h2>
+      <div class="sub">مقالات هر دسته‌بندی در صفحه «مطالعات».</div>
+      <div class="f" style="max-width:260px;">
+        <label>انتخاب دسته‌بندی</label>
+        <select id="studyCatSelect"></select>
+      </div>
+      <div id="studiesItems"></div>
+      <button class="btn btn-ghost btn-sm" id="addArticleBtn">+ افزودن مطلب جدید</button>
+    </div>
+
+    <!-- ---------- BUTTONS TAB ---------- -->
+    <div class="tab-panel" id="tab-buttons">
+      <h2>دکمه‌های سفارشی</h2>
+      <div class="sub">دکمه‌هایی که می‌توانید به هدر، صفحه خانه یا فوتر سایت اضافه کنید (مثلاً لینک اینستاگرام یا صفحه جدید).</div>
+      <div id="buttonsItems"></div>
+      <button class="btn btn-ghost btn-sm" id="addButtonBtn">+ افزودن دکمه جدید</button>
+    </div>
+
+    <!-- ---------- SUPPORT TAB ---------- -->
+    <div class="tab-panel" id="tab-support">
+      <h2>پشتیبانی و تماس</h2>
+      <div class="sub">لینک تلگرام و متن‌های صفحه پشتیبانی.</div>
+      <div class="card liquid-glass">
+        <div class="f"><label>آدرس تلگرام (در همه دکمه‌های سایت استفاده می‌شود)</label><input id="s_telegram"></div>
+        <div class="f"><label>عنوان باکس پشتیبانی</label><input id="s_title"></div>
+        <div class="f"><label>توضیح باکس پشتیبانی</label><textarea id="s_desc" rows="2"></textarea></div>
+        <div class="f"><label>متن دکمه پشتیبانی</label><input id="s_btnText"></div>
+      </div>
+    </div>
+
+    <div class="save-bar liquid-glass">
+      <span class="save-msg" id="saveMsg">تغییرات ذخیره شد ✓</span>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-danger" id="resetBtn">بازگشت به حالت پیش‌فرض</button>
+        <button class="btn btn-primary" id="saveBtn">ذخیره همه تغییرات</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="store.js"></script>
+<script>
+  /* =========================================================
+     LOGIN  — username: ALIVANA  |  password: Psychology
+     (client-side gate for content editing — not bank-grade
+     security, but keeps casual visitors out of the panel)
+     ========================================================= */
+  const ADMIN_USER = 'ALIVANA';
+  const ADMIN_PASS = 'Psychology';
+  const SESSION_KEY = 'alivana_admin_session';
+
+  const loginScreen = document.getElementById('loginScreen');
+  const dashboard = document.getElementById('dashboard');
+
+  function showDashboard(){
+    loginScreen.style.display = 'none';
+    dashboard.classList.add('show');
+    renderAll();
+  }
+
+  if (sessionStorage.getItem(SESSION_KEY) === '1') {
+    showDashboard();
+  }
+
+  document.getElementById('loginSubmit').addEventListener('click', doLogin);
+  document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+
+  function doLogin(){
+    const u = document.getElementById('loginUser').value.trim();
+    const p = document.getElementById('loginPass').value;
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+      sessionStorage.setItem(SESSION_KEY, '1');
+      document.getElementById('loginError').classList.remove('show');
+      showDashboard();
+    } else {
+      document.getElementById('loginError').classList.add('show');
+    }
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  });
+
+  /* =========================================================
+     DATA
+     ========================================================= */
+  let DATA = loadSiteData();
+
+  /* ---------------- sidebar tabs ---------------- */
+  document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn[data-tab]').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  function renderAll(){
+    // hero
+    document.getElementById('h_titlePlain').value = DATA.hero.titlePlain;
+    document.getElementById('h_titleGrad').value = DATA.hero.titleGrad;
+    document.getElementById('h_subShort').value = DATA.hero.subShort;
+    document.getElementById('h_subDetail').value = DATA.hero.subDetail;
+    document.getElementById('h_ctaText').value = DATA.hero.ctaText;
+
+    // support
+    document.getElementById('s_telegram').value = DATA.telegram;
+    document.getElementById('s_title').value = DATA.support.title;
+    document.getElementById('s_desc').value = DATA.support.desc;
+    document.getElementById('s_btnText').value = DATA.support.btnText;
+
+    // media
+    document.getElementById('m_videoUrl').value = DATA.bgVideoUrl;
+
+    renderGallery();
+    renderTopics();
+    renderPlans();
+    renderStudyCatSelect();
+    renderStudies();
+    renderButtons();
+  }
+
+  /* =========================================================
+     MEDIA — video + gallery
+     ========================================================= */
+  document.getElementById('m_videoFile').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    if(file.size > 15 * 1024 * 1024){
+      alert('این فایل بزرگ‌تر از حد مجاز برای آپلود مستقیم است. لطفاً از فیلد «آدرس URL» استفاده کنید.');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => { DATA.bgVideoUrl = reader.result; document.getElementById('m_videoUrl').value = '(فایل آپلود شد)'; };
+    reader.readAsDataURL(file);
+  });
+
+  function renderGallery(){
+    const wrap = document.getElementById('galleryItems');
+    wrap.innerHTML = '';
+    DATA.gallery.forEach((g, i) => {
+      const block = document.createElement('div');
+      block.className = 'item-block';
+      block.innerHTML = `
+        <div class="item-block-head">
+          <span>تصویر ${i + 1}</span>
+          <button class="btn btn-danger btn-sm" data-remove="${i}">حذف</button>
+        </div>
+        <div class="f"><label>آدرس URL تصویر</label><input data-field="url" value="${g.url || ''}"></div>
+        <div class="f"><label>یا آپلود از دستگاه</label><input type="file" accept="image/*" data-upload="1"></div>
+        <div class="f"><label>توضیح کوتاه (اختیاری)</label><input data-field="caption" value="${g.caption || ''}"></div>
+        ${g.url ? `<img class="preview-thumb" src="${g.url}">` : ''}
+      `;
+      block.querySelector('[data-field="url"]').addEventListener('input', e => g.url = e.target.value);
+      block.querySelector('[data-field="caption"]').addEventListener('input', e => g.caption = e.target.value);
+      block.querySelector('[data-upload]').addEventListener('change', e => {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = () => { g.url = reader.result; renderGallery(); };
+        reader.readAsDataURL(file);
+      });
+      block.querySelector('[data-remove]').addEventListener('click', () => { DATA.gallery.splice(i, 1); renderGallery(); });
+      wrap.appendChild(block);
+    });
+  }
+  document.getElementById('addGalleryBtn').addEventListener('click', () => {
+    DATA.gallery.push({ url: '', caption: '' });
+    renderGallery();
+  });
+
+  /* =========================================================
+     TOPICS
+     ========================================================= */
+  function renderTopics(){
+    const wrap = document.getElementById('topicsItems');
+    wrap.innerHTML = '';
+    DATA.topics.forEach((t, i) => {
+      const block = document.createElement('div');
+      block.className = 'item-block liquid-glass';
+      block.innerHTML = `
+        <div class="item-block-head">
+          <span>موضوع ${i + 1}</span>
+          <button class="btn btn-danger btn-sm" data-remove="${i}">حذف</button>
+        </div>
+        <div class="field-row">
+          <div class="f"><label>حرف نماد (یک حرف)</label><input data-f="icon" value="${t.icon}" maxlength="2"></div>
+          <div class="f"><label>عنوان</label><input data-f="title" value="${t.title}"></div>
+        </div>
+        <div class="f"><label>توضیح کوتاه (زیر عنوان)</label><input data-f="teaser" value="${t.teaser}"></div>
+        <div class="f"><label>توضیح کامل (هنگام باز شدن کارت)</label><textarea rows="2" data-f="detail">${t.detail}</textarea></div>
+      `;
+      block.querySelectorAll('[data-f]').forEach(el => {
+        el.addEventListener('input', () => t[el.dataset.f] = el.value);
+      });
+      block.querySelector('[data-remove]').addEventListener('click', () => { DATA.topics.splice(i, 1); renderTopics(); });
+      wrap.appendChild(block);
+    });
+  }
+  document.getElementById('addTopicBtn').addEventListener('click', () => {
+    DATA.topics.push({ icon: '+', title: 'موضوع جدید', teaser: '', detail: '' });
+    renderTopics();
+  });
+
+  /* =========================================================
+     PLANS
+     ========================================================= */
+  function renderPlans(){
+    const wrap = document.getElementById('plansItems');
+    wrap.innerHTML = '';
+    DATA.plans.forEach((p, i) => {
+      const block = document.createElement('div');
+      block.className = 'item-block liquid-glass';
+      block.innerHTML = `
+        <div class="item-block-head">
+          <span>پلن ${i + 1}</span>
+          <button class="btn btn-danger btn-sm" data-remove="${i}">حذف</button>
+        </div>
+        <div class="field-row">
+          <div class="f"><label>نام پلن</label><input data-f="name" value="${p.name}"></div>
+          <div class="f"><label>قیمت</label><input data-f="price" value="${p.price}"></div>
+        </div>
+        <div class="field-row">
+          <div class="f"><label>واحد / دوره (مثلاً «هزار تومان / ماه»)</label><input data-f="unit" value="${p.unit}"></div>
+          <div class="f"><label>پلن ویژه باشد؟</label>
+            <select data-f="featured">
+              <option value="false" ${!p.featured ? 'selected' : ''}>خیر</option>
+              <option value="true" ${p.featured ? 'selected' : ''}>بله</option>
+            </select>
+          </div>
+        </div>
+        <div class="f"><label>امکانات (هر خط یک ویژگی)</label><textarea rows="4" data-f="features">${p.features.join('\n')}</textarea></div>
+      `;
+      block.querySelectorAll('[data-f]').forEach(el => {
+        el.addEventListener('input', () => {
+          if(el.dataset.f === 'featured') p.featured = el.value === 'true';
+          else if(el.dataset.f === 'features') p.features = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+          else p[el.dataset.f] = el.value;
+        });
+        if(el.tagName === 'SELECT'){
+          el.addEventListener('change', () => p.featured = el.value === 'true');
+        }
+      });
+      block.querySelector('[data-remove]').addEventListener('click', () => { DATA.plans.splice(i, 1); renderPlans(); });
+      wrap.appendChild(block);
+    });
+  }
+  document.getElementById('addPlanBtn').addEventListener('click', () => {
+    DATA.plans.push({ name: 'پلن جدید', price: '۰', unit: 'هزار تومان / ماه', featured: false, features: [] });
+    renderPlans();
+  });
+
+  /* =========================================================
+     STUDIES / ARTICLES
+     ========================================================= */
+  function renderStudyCatSelect(){
+    const sel = document.getElementById('studyCatSelect');
+    sel.innerHTML = DATA.studies.map(c => `<option value="${c.key}">${c.label}</option>`).join('');
+    sel.addEventListener('change', renderStudies);
+  }
+  function renderStudies(){
+    const key = document.getElementById('studyCatSelect').value || DATA.studies[0].key;
+    const cat = DATA.studies.find(c => c.key === key);
+    const wrap = document.getElementById('studiesItems');
+    wrap.innerHTML = '';
+    if(!cat) return;
+    cat.articles.forEach((art, i) => {
+      const block = document.createElement('div');
+      block.className = 'item-block liquid-glass';
+      block.innerHTML = `
+        <div class="item-block-head">
+          <span>مطلب ${i + 1}</span>
+          <button class="btn btn-danger btn-sm" data-remove="${i}">حذف</button>
+        </div>
+        <div class="f"><label>عنوان</label><input data-f="title" value="${art.title}"></div>
+        <div class="f"><label>توضیح کوتاه</label><input data-f="teaser" value="${art.teaser}"></div>
+        <div class="f"><label>تصویر مطلب (اختیاری) — آدرس URL</label><input data-f="image" value="${art.image || ''}"></div>
+        <div class="f"><label>متن کامل (هر خط یک پاراگراف)</label><textarea rows="5" data-f="body">${art.body.join('\n')}</textarea></div>
+      `;
+      block.querySelectorAll('[data-f]').forEach(el => {
+        el.addEventListener('input', () => {
+          if(el.dataset.f === 'body') art.body = el.value.split('\n').map(s => s.trim()).filter(Boolean);
+          else art[el.dataset.f] = el.value;
+        });
+      });
+      block.querySelector('[data-remove]').addEventListener('click', () => { cat.articles.splice(i, 1); renderStudies(); });
+      wrap.appendChild(block);
+    });
+  }
+  document.getElementById('addArticleBtn').addEventListener('click', () => {
+    const key = document.getElementById('studyCatSelect').value || DATA.studies[0].key;
+    const cat = DATA.studies.find(c => c.key === key);
+    cat.articles.push({ title: 'مطلب جدید', teaser: '', image: '', body: [] });
+    renderStudies();
+  });
+
+  /* =========================================================
+     CUSTOM BUTTONS
+     ========================================================= */
+  function renderButtons(){
+    const wrap = document.getElementById('buttonsItems');
+    wrap.innerHTML = '';
+    DATA.customButtons.forEach((b, i) => {
+      const block = document.createElement('div');
+      block.className = 'item-block liquid-glass';
+      block.innerHTML = `
+        <div class="item-block-head">
+          <span>دکمه ${i + 1}</span>
+          <button class="btn btn-danger btn-sm" data-remove="${i}">حذف</button>
+        </div>
+        <div class="field-row">
+          <div class="f"><label>متن دکمه</label><input data-f="label" value="${b.label}"></div>
+          <div class="f"><label>محل نمایش</label>
+            <select data-f="placement">
+              <option value="hero" ${b.placement === 'hero' ? 'selected' : ''}>صفحه خانه</option>
+              <option value="navbar" ${b.placement === 'navbar' ? 'selected' : ''}>هدر (منوی بالا)</option>
+              <option value="footer" ${b.placement === 'footer' ? 'selected' : ''}>فوتر (پایین سایت)</option>
+            </select>
+          </div>
+        </div>
+        <div class="f"><label>لینک مقصد (URL)</label><input data-f="url" value="${b.url}"></div>
+      `;
+      block.querySelectorAll('[data-f]').forEach(el => {
+        el.addEventListener('input', () => b[el.dataset.f] = el.value);
+        if(el.tagName === 'SELECT') el.addEventListener('change', () => b.placement = el.value);
+      });
+      block.querySelector('[data-remove]').addEventListener('click', () => { DATA.customButtons.splice(i, 1); renderButtons(); });
+      wrap.appendChild(block);
+    });
+  }
+  document.getElementById('addButtonBtn').addEventListener('click', () => {
+    DATA.customButtons.push({ label: 'دکمه جدید', url: 'https://t.me/alipsy405_ir', placement: 'hero' });
+    renderButtons();
+  });
+
+  /* =========================================================
+     SAVE / RESET
+     ========================================================= */
+  function collectSimpleFields(){
+    DATA.hero.titlePlain = document.getElementById('h_titlePlain').value;
+    DATA.hero.titleGrad = document.getElementById('h_titleGrad').value;
+    DATA.hero.subShort = document.getElementById('h_subShort').value;
+    DATA.hero.subDetail = document.getElementById('h_subDetail').value;
+    DATA.hero.ctaText = document.getElementById('h_ctaText').value;
+
+    DATA.telegram = document.getElementById('s_telegram').value;
+    DATA.support.title = document.getElementById('s_title').value;
+    DATA.support.desc = document.getElementById('s_desc').value;
+    DATA.support.btnText = document.getElementById('s_btnText').value;
+
+    const urlField = document.getElementById('m_videoUrl').value;
+    if(urlField && urlField !== '(فایل آپلود شد)') DATA.bgVideoUrl = urlField;
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    collectSimpleFields();
+    const ok = saveSiteData(DATA);
+    const msg = document.getElementById('saveMsg');
+    if(ok){
+      msg.textContent = 'تغییرات ذخیره شد ✓';
+      msg.style.color = '#34d399';
+    } else {
+      msg.textContent = 'ذخیره ناموفق بود — احتمالاً حجم رسانه آپلودی زیاد است.';
+      msg.style.color = '#f87171';
+    }
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 3000);
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if(confirm('همه تغییرات به حالت پیش‌فرض بازمی‌گردد. مطمئن هستید؟')){
+      resetSiteData();
+      DATA = loadSiteData();
+      renderAll();
+    }
+  });
+</script>
+
+</body>
+</html>
